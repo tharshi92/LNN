@@ -1,13 +1,14 @@
-# Coded by Tharshi Srikannathasan Feb 2016
+# Coded by Tharshi Srikannathasan March 2016
 # This is a 4th order Runge-Kutta Scheme to Solve the Lorentz Model
 
 # import all needed libraries 
 import numpy as np;
 import pylab as pl;
+from mpl_toolkits.mplot3d import Axes3D
 
 # define simulation parameters
 T = 4.0;    # simultion length
-h = 0.001;    # number of steps
+h = 0.01;    # number of steps
 N = T/h;    # timestep
 
 x = np.zeros(N);
@@ -20,9 +21,9 @@ beta = 8.0/3.0;
 rho = 28;
 
 # initial conditions
-x[0] = -4.5;
-y[0] = 1.7;
-z[0] = 0.1;
+x[0] = -10.0;
+y[0] = -5.0;
+z[0] = 20.0;
 
 # define derivative functions
 
@@ -50,9 +51,9 @@ for i in xrange(0, int(N - 1)):
     q2 = y_prime(rho, x[i] + h*p1/2.0, y[i] + h*q1/2.0, z[i] + h*r1/2.0);
     r2 = z_prime(beta, x[i] + h*p1/2.0, y[i] + h*q1/2.0, z[i] + h*r1/2.0); 
 
-    p3 = h*x_prime(sigma, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
-    q3 = h*y_prime(rho, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
-    r3 = h*z_prime(beta, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
+    p3 = x_prime(sigma, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
+    q3 = y_prime(rho, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
+    r3 = z_prime(beta, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
 
     p4 = x_prime(sigma, x[i] + h*p3, y[i] + h*q3, z[i] + h*r3);
     q4 = y_prime(rho, x[i] + h*p3, y[i] + h*q3, z[i] + h*r3); 
@@ -64,10 +65,21 @@ for i in xrange(0, int(N - 1)):
     
 # plot results
 
-pl.plot(x)
-pl.plot(y)
-pl.plot(z)
-pl.xlabel("timestep")
-pl.show()
+pl.figure(1);
+pl.plot(x, '-.', label='x');
+pl.plot(y, '-.', label='y');
+pl.plot(z, '-.', label='z');
+pl.legend();
+pl.xlabel("timestep");
+
+fig = pl.figure();
+ax = fig.add_subplot(111, projection='3d');
+ax.scatter(x, y, z);
+
+ax.set_xlabel('X');
+ax.set_ylabel('Y');
+ax.set_zlabel('Z');
+
+pl.show();
     
 print("Everything is Okay.")
