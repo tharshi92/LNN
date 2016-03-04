@@ -1,7 +1,7 @@
 # We are attempting to use a neural network to learn the dynamical behaviour of one out of three lorentz
 #   components. No regularization, no ensemble, for this run
 
-# Coded by Tharshi Srikannathasan March 2016
+# Coded by Tharshi Srikannathasan March 2016, Inspired by WelchLabs!
 
 # import modules
 import numpy as np
