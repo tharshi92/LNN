@@ -34,33 +34,39 @@ class Neural_Network(object):
     
     def forward(self, A):
         # propogate inputs though network
-        L = self.numLayers;    
+        L = self.numLayers;
+        self.Cs = [];   # list of linear combinations of nodes
+        self.As = [];   # lists of activations
         self.a = A;
         
         for l in range(1, L):
             self.temp1 = np.dot(self.a, self.weights[l - 1]);
+            self.Cs.append(self.temp1);
             self.a = self.sigmoid(self.temp1);
+            self.As.append(self.a);
             
-        B = self.a;
-        return B;   # return output after forward propogation 
+        bHat = self.a;
+        return bHat;   # return output after forward propogation 
 
-    def costFunction(self, X, y):
-        #Compute cost for given X,y, use weights already stored in class.
-        self.yHat = self.forward(X)
-        J = 0.5*sum((y-self.yHat)**2)
-        return J
-#
-#     def costFunctionPrime(self, X, y):
-#         #Compute derivative with respect to W and W2 for a given X and y:
-#         self.yHat = self.forward(X)
-#
-#         delta3 = np.multiply(-(y-self.yHat), self.sigmoidPrime(self.z3))
-#         dJdW2 = np.dot(self.a2.T, delta3)
-#
-#         delta2 = np.dot(delta3, self.W2.T)*self.sigmoidPrime(self.z2)
-#         # dJdW1 = np.dot(X.T, delta2)
-#
-#         return dJdW1, dJdW2
+    def costFunction(self, A, b):
+        # compute cost for given inputs and outputs, using the weights already stored in class
+        bHat = self.forward(A);
+        J = (1.0/len(A))*0.5*sum(np.linalg.norm(b - bHat, axis=1)**2.0);
+        return J;
+
+    def costFunctionPrime(self, A, b):
+        # compute derivative with respect to weights given the data
+        L = self.numLayers;
+        self.bHat = self.forward(A);
+        self.dJdWs = [];
+        
+        delta = -(b - self.bHat)*self.sigmoidPrime(self.Cs[L - 2]);
+        for i in reversed(range(1, L-1)):
+            self.dJdWs.append(np.dot(self.As[i].T, delta));
+            delta = np.dot(delta, self.weights[i].T)*self.sigmoidPrime(self.Cs[i - 1]);
+        
+        return reversed(self.dJdWs);
+        
 #
 #     #Helper Functions for interacting with other classes:
 #     def getParams(self):
@@ -79,32 +85,6 @@ class Neural_Network(object):
 #     def computeGradients(self, X, y):
 #         dJdW1, dJdW2 = self.costFunctionPrime(X, y)
 #         return np.concatenate((dJdW1.ravel(), dJdW2.ravel()))
-#
-# def computeNumericalGradient(N, X, y):
-#         paramsInitial = N.getParams()
-#         numgrad = np.zeros(paramsInitial.shape)
-#         perturb = np.zeros(paramsInitial.shape)
-#         e = 1e-4
-#
-#         for p in range(len(paramsInitial)):
-#             #Set perturbation vector
-#             perturb[p] = e
-#             N.setParams(paramsInitial + perturb)
-#             loss2 = N.costFunction(X, y)
-#
-#             N.setParams(paramsInitial - perturb)
-#             loss1 = N.costFunction(X, y)
-#
-#             #Compute Numerical Gradient
-#             numgrad[p] = (loss2 - loss1) / (2*e)
-#
-#             #Return the value we changed to zero:
-#             perturb[p] = 0
-#
-#         #Return Params to original value:
-#         N.setParams(paramsInitial)
-#
-#         return numgrad
 #
 # class trainer(object):
 #     def __init__(self, N):
