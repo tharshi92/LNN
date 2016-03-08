@@ -10,9 +10,9 @@ from scipy import optimize
 
 class Neural_Network(object):
     
-    def __init__(self, layerConfig):        
+    def __init__(self, layerSizes):        
         # define hyperparameters
-        self.layerSizes = layerConfig;
+        self.layerSizes = layerSizes;
         self.numLayers = len(self.layerSizes);
         
         # initialize weights (parameters)
@@ -21,17 +21,6 @@ class Neural_Network(object):
         
         for l in range(self.numLayers - 1):
             self.weights.append(np.random.rand(self.layerSizes[l], self.layerSizes[l + 1]));
-            
-        print 'Initializing Neural Network...';
-        print 'There are ', self.numLayers, ' layers in the network.';
-        #print "Initial weights: ", self.weights;
-        print 'The shapes of the weights are:'
-        
-        for l in range(self.numLayers - 1):
-            print self.weights[l].shape
-            
-        print 'Inital setup is complete.'
-        print ' '
             
     def sigmoid(self, z):
         # apply sigmoid activation function to scalar, vector, or matrix
@@ -47,15 +36,15 @@ class Neural_Network(object):
         self.Cs = [];   # list of linear combinations of nodes
         self.As = [];   # lists of activations
         self.a = A;
-
-        for l in range(L - 1):
-            temp1 = np.dot(self.a, self.weights[l]);
-            self.a = self.sigmoid(temp1);
-            self.Cs.append(temp1);
+        
+        for l in range(1, L):
+            self.temp1 = np.dot(self.a, self.weights[l - 1]);
+            self.Cs.append(self.temp1);
+            self.a = self.sigmoid(self.temp1);
             self.As.append(self.a);
-
+            
         bHat = self.a;
-        return bHat;   # return estimate after forward propogation 
+        return bHat;   # return output after forward propogation 
 
     def costFunction(self, A, b):
         # compute cost for given inputs and outputs, using the weights already stored in class
@@ -66,15 +55,15 @@ class Neural_Network(object):
     def costFunctionPrime(self, A, b):
         # compute derivative with respect to weights given the data
         L = self.numLayers;
-        bHat = self.forward(A);
+        self.bHat = self.forward(A);
         self.dJdWs = [];
         
-        delta = -(b - bHat)*self.sigmoidPrime(self.Cs[L - 2]);
-        for l in reversed(range(L - 1)):
-            self.dJdWs.append(np.dot(self.As[l - 1].T, delta));
-            delta = np.dot(delta, self.weights[l].T)*self.sigmoidPrime(self.Cs[l - 1]);
-
-        return list(reversed(self.dJdWs));
+        delta = -(b - self.bHat)*self.sigmoidPrime(self.Cs[L - 2]);
+        for i in reversed(range(1, L-1)):
+            self.dJdWs.append(np.dot(self.As[i].T, delta));
+            delta = np.dot(delta, self.weights[i].T)*self.sigmoidPrime(self.Cs[i - 1]);
+        
+        return self.dJdWs;
         
 
     # helper functions for interacting with other classes
@@ -106,6 +95,7 @@ class Neural_Network(object):
             
         return temp2;
 
+
 class trainer(object):
     
     def __init__(self, N):
@@ -114,8 +104,6 @@ class trainer(object):
         
         # make empty list to store costs
         self.J = [];
-        
-        print "Training the Network..."
 
     def callbackF(self, params):
         self.N.setParams(params);
@@ -141,32 +129,17 @@ class trainer(object):
         
         #_res = optimize.minimize(self.costWrapper, params0, method='BFGS', jac=self.costGradWrapper, args=(A, b), callback=self.callbackF, options=options);
         x0, fval, grid, Jout = optimize.brute(self.costWrapper, bounds, args=(A, b), Ns=100, full_output=1, disp=True);
+        print x0
+        print Jout
         self.N.setParams(x0);
         self.optimizationResults = x0;
         
     def gradientDescent(self, A, b, alpha, maxiter):
-        
-        print 'Method of Gradient Descent';
         
         self.A = A;
         self.b = b;
         self.alpha = alpha;
         self.maxiter = maxiter;
         self.iter = 0;
-        self.params = self.N.getParams();
-        
-        for i in range(self.maxiter):
-            self.callbackF(self.params);
-            grads = self.N.computeGradients(self.A, self.b);
-            self.params -= alpha*grads;
-            self.iter += 1;
-            
-        self.N.setParams(self.params);
-            
-        print 'Training Complete:';
-        print 'Value of cost = ', self.J[maxiter - 1];
-        print 'Norm of cost gradient = ', np.linalg.norm(grads);
-            
-        
         
         
