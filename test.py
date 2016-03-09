@@ -8,7 +8,7 @@ import random;
 
 plotOriginalTarget = 1;
 plotFit = 0;
-plotCost = 0;
+plotCost = 1;
 
 # Create Data #
 
@@ -50,19 +50,21 @@ print ' '
 
 # Create and Train Neural Network #
 
-layerConfig = [dimX, 5 , dimY];
+layerConfig = [dimX, 2, dimY];
 NN = Neural_Network(layerConfig);
 
-T = trainer(NN);
+T = trainer(NN); 
 grad = NN.computeGradients(X, Y);
 numGrad = computeNumericalGradient(NN, X, Y);
 print 'Gradient Checking!'
-print numGrad
+print 'numGrad: ', numGrad
 print ''
-print grad
+print 'grad: ', grad
+print ''
+print np.linalg.norm(grad - numGrad)/np.linalg.norm(grad + numGrad)
 
-# T.gradientDescent(X, Y, 1, 2500);
-# fit = NN.forward(temp0);
+T.gradientDescent(X, Y, 0.01, 2500);
+#fit = NN.forward(temp0);
 
 if plotOriginalTarget:
     fig0 = pl.figure();
@@ -74,7 +76,6 @@ if plotOriginalTarget:
     pl.legend();
     pl.xlabel('x')
     pl.ylabel('y')
-
 
 if plotCost:
     pl.figure();

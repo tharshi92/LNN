@@ -24,14 +24,14 @@ class Neural_Network(object):
             
         print 'Initializing Neural Network...';
         print 'There are ', self.numLayers, ' layers in the network.';
-        #print "Initial weights: ", self.weights;
+        print "Initial weights: ", self.weights;
         print 'The shapes of the weights are:'
         
         for l in range(self.numLayers - 1):
             print self.weights[l].shape
             
         print 'Inital setup is complete.'
-        print ' '
+        print ''
             
     def sigmoid(self, z):
         # apply sigmoid activation function to scalar, vector, or matrix
@@ -39,7 +39,8 @@ class Neural_Network(object):
 
     def sigmoidPrime(self, z):
         # gradient of sigmoid
-        return np.exp(-z)/((1.0 + np.exp(-z))**2.0);
+        sig = self.sigmoid(z);
+        return sig*(1.0 - sig);
     
     def forward(self, A):
         # propogate inputs though network
@@ -47,13 +48,14 @@ class Neural_Network(object):
         self.Cs = [];   # list of linear combinations of nodes
         self.As = [];   # lists of activations
         self.a = A;
+        self.As.append(self.a);
 
         for l in range(L - 1):
             temp1 = np.dot(self.a, self.weights[l]);
             self.a = self.sigmoid(temp1);
             self.Cs.append(temp1);
             self.As.append(self.a);
-
+            
         bHat = self.a;
         return bHat;   # return estimate after forward propogation 
 
@@ -70,9 +72,10 @@ class Neural_Network(object):
         self.dJdWs = [];
         
         delta = -(b - bHat)*self.sigmoidPrime(self.Cs[L - 2]);
-        for l in reversed(range(L - 1)):
-            self.dJdWs.append(np.dot(self.As[l - 1].T, delta));
-            delta = np.dot(delta, self.weights[l].T)*self.sigmoidPrime(self.Cs[l - 1]);
+        self.dJdWs.append(np.dot(self.As[L - 2].T, delta));
+        for l in reversed(range(L - 2)):
+            delta = np.dot(delta, self.weights[l + 1].T)*self.sigmoidPrime(self.Cs[l]);
+            self.dJdWs.append(np.dot(self.As[l].T, delta));
 
         return list(reversed(self.dJdWs));
         
@@ -155,7 +158,6 @@ class trainer(object):
         for i in range(self.maxiter):
             self.callbackF(self.params);
             grads = self.N.computeGradients(self.A, self.b);
-            print self.params.shape, grads.shape
             self.params -= alpha*grads;
             self.iter += 1;
             
@@ -164,13 +166,14 @@ class trainer(object):
         print 'Training Complete:';
         print 'Value of cost = ', self.J[maxiter - 1];
         print 'Norm of cost gradient = ', np.linalg.norm(grads);
+        print 'Final weights:', self.N.weights; 
 
 def computeNumericalGradient(N, X, y):
     
         params1 = N.getParams();
         numGrad = np.zeros(params1.shape);
         perturb = np.zeros(params1.shape);
-        e = 1e-5;
+        e = 1e-2;
 
         for p in range(len(params1)):
             # set perturbation vector
