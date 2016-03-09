@@ -4,7 +4,6 @@
 # Inspired by the work of Stephen Welch from Welch Labs
 #
 
-
 import numpy as np
 from scipy import optimize
 
@@ -14,12 +13,13 @@ class Neural_Network(object):
         # define hyperparameters
         self.layerSizes = layerConfig;
         self.numLayers = len(self.layerSizes);
+        L = self.numLayers;
         
         # initialize weights (parameters)
         
         self.weights = [];
         
-        for l in range(self.numLayers - 1):
+        for l in range(L - 1):
             self.weights.append(np.random.rand(self.layerSizes[l], self.layerSizes[l + 1]));
             
         print 'Initializing Neural Network...';
@@ -76,7 +76,6 @@ class Neural_Network(object):
 
         return list(reversed(self.dJdWs));
         
-
     # helper functions for interacting with other classes
     def getParams(self):
         # unroll all weight matrices into vectors and combine them
@@ -114,8 +113,6 @@ class trainer(object):
         
         # make empty list to store costs
         self.J = [];
-        
-        print "Training the Network..."
 
     def callbackF(self, params):
         self.N.setParams(params);
@@ -146,7 +143,7 @@ class trainer(object):
         
     def gradientDescent(self, A, b, alpha, maxiter):
         
-        print 'Method of Gradient Descent';
+        print 'Training Network using the Method of Gradient Descent';
         
         self.A = A;
         self.b = b;
@@ -158,6 +155,7 @@ class trainer(object):
         for i in range(self.maxiter):
             self.callbackF(self.params);
             grads = self.N.computeGradients(self.A, self.b);
+            print self.params.shape, grads.shape
             self.params -= alpha*grads;
             self.iter += 1;
             
@@ -166,7 +164,33 @@ class trainer(object):
         print 'Training Complete:';
         print 'Value of cost = ', self.J[maxiter - 1];
         print 'Norm of cost gradient = ', np.linalg.norm(grads);
+
+def computeNumericalGradient(N, X, y):
+    
+        params1 = N.getParams();
+        numGrad = np.zeros(params1.shape);
+        perturb = np.zeros(params1.shape);
+        e = 1e-5;
+
+        for p in range(len(params1)):
+            # set perturbation vector
+            perturb[p] = e;
+            N.setParams(params1 + perturb);
+            loss2 = N.costFunction(X, y);
             
+            N.setParams(params1 - perturb);
+            loss1 = N.costFunction(X, y);
+
+            # compute numerical gradient
+            numGrad[p] = (loss2 - loss1) / (2*e);
+
+            # return the value we changed to zero:
+            perturb[p] = 0;
+            
+        # return params to original value:
+        N.setParams(params1)
+
+        return numGrad 
         
         
         
