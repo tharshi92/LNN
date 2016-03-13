@@ -10,6 +10,8 @@ testFunction = 1;
 exFunction = 0;
 gradTest = 0;
 
+# create data (problem spot)
+
 if exFunction:
 
     X = np.array(([3,5], [5,1], [10,2]), dtype=float);
@@ -17,44 +19,40 @@ if exFunction:
     
     testX = np.array(([4, 5.5], [4.5,1], [9,2.5], [6, 2]), dtype=float);
     testY = np.array(([70], [89], [85], [75]), dtype=float);
-    
-    print X.shape, type(X)
-    print testX.shape, type(testX)
 
-    # Normalize
-    xScale = np.amax(X, axis=0);
-    yScale = np.amax(y, axis=0);
-    X = X/xScale;
-    y = y/yScale;
-    testX = testX/xScale;
-    testY = testY/yScale;
+
 
 if testFunction:
     
-    X = np.linspace(-1, 1, 20)
+    X = np.array([[3], [7], [1], [2]])
     X = np.reshape(X, (len(X), 1));
-    y = X*X;
+    y = X*X + np.random.randn(4, 1);
+    print y
     
-    
-    testX = np.random.uniform(-1, 1, 5);
+    testX = np.array([[-2], [10], [5], [-3]])
     testX = np.reshape(testX, (len(testX), 1));
-    testY = X*X;
+    testY = testX*testX;
     
-    print X.shape, type(X)
-    print testX.shape, type(testX)
     
-    # Normalize
-    xScale = np.amax(X, axis=0);
-    yScale = np.amax(y, axis=0);
-    X = X/xScale;
-    y = y/yScale;
-    testX = testX/xScale;
-    testY = testY/yScale;
 
-dimX = len(X.T)
-dimY = len(y.T)
+print X.shape, type(X)
+print testX.shape, type(testX)
+print y.shape, type(y)
+print testY.shape, type(testY)
+    
+# Normalize and define network parameters
+xScale = np.amax(X, axis=0);
+yScale = np.amax(y, axis=0);
+X = X/xScale;
+y = y/yScale;
+testX = testX/xScale;
+testY = testY/yScale;
 
-NN = Neural_Network(dimX, dimY, 3, 1e-5);
+dimX = len(X.T);
+dimY = len(y.T);
+n = 4;
+
+NN = Neural_Network(dimX, dimY, n, 1e-4);
 T = trainer(NN);
 
 T.train(X, y, testX, testY);
@@ -136,7 +134,7 @@ if plot:
     if testFunction:
         # test network for various combinations
         numPoints = 100;
-        x0 = np.linspace(-1, 1, numPoints);
+        x0 = np.linspace(-xScale, xScale, numPoints);
         x0 = np.reshape(x0, (len(x0), 1));
         # normalize data (same way training data was normalized)
         x0 = x0/xScale;
