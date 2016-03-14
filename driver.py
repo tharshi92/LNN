@@ -39,9 +39,10 @@ print testX.shape, type(testX)
 print y.shape, type(y)
 print testY.shape, type(testY)
     
-# Normalize and define network parameters
+# Normalize Data
 xScale = np.amax(X, axis=0);
 yScale = np.amax(y, axis=0);
+
 X = X/xScale;
 y = y/yScale;
 testX = testX/xScale;
@@ -51,15 +52,19 @@ testY = testY/yScale;
 dimX = len(X.T);     # dimension of input data
 dimY = len(y.T);     # dimenstion of output data
 n = 10;              # number of neurons in hidden layer
-regParam = 1e-5;     # regularization hyperparameter
+regParam = 1e-4;     # regularization hyperparameter
 
+# create network
 NN = Neural_Network(dimX, dimY, n, regParam);
 T = trainer(NN);
 
+# train network
 T.train(X, y, testX, testY);
 
+# output statistics
 chiSqTrain = sum((y - NN.forward(X))**2);
 chiSqTest = sum((testY - NN.forward(testX))**2);
+
 print 'Estimated Chi-Squared Goodness of fit (training):', chiSqTrain;
 print 'Estimated Chi-Squared Goodness of fit (testing):', chiSqTest;
 
@@ -113,6 +118,7 @@ if plot:
         pl.clabel(CS, inline=1, fontsize=10)
         pl.xlabel('Hours Sleep')
         pl.ylabel('Hours Study')
+        pl.title('Contour Plot of Fit')
     
         #3D plot:
 
@@ -131,6 +137,7 @@ if plot:
         ax.set_xlabel('Hours Sleep')
         ax.set_ylabel('Hours Study')
         ax.set_zlabel('Test Score')
+        ax.set_title('Data Fit')
 
 
     if testFunction:
@@ -140,14 +147,16 @@ if plot:
         x0 = np.reshape(x0, (len(x0), 1));
         # normalize data (same way training data was normalized)
         x0 = x0/xScale;
+        # forward prop through network with trained weights
         fit = NN.forward(x0);
-
+        # plot
         pl.figure();
         pl.scatter(xScale[0]*X[:, 0], yScale*y, c='b', marker = 'o');
         pl.scatter(xScale[0]*testX[:,0], yScale*testY, c='r', marker = 'o');
         pl.plot(x0*xScale, yScale*fit);
         pl.xlabel('x0');
         pl.ylabel('y');
+        pl.title('Fit of Data')
         print ''
     
     pl.show();
