@@ -10,21 +10,19 @@ from NN import Neural_Network, computeNumericalGradient, trainer
 # Options
 
 plot = 1;           # turn on plots of cost, fit, and contour plots
-testFunction = 1;   # use the tes function and np.linspace() to generate training and data
-exFunction = 0;     # use hand typed data to create training and testing data
+testFunction = 0;   # use the test function and np.linspace() to generate training and data (** PROBLEM **)
+exFunction = 1;     # use hand typed data to create training and testing data
 gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical                          gradient
 
 # create data (problem spot)
 
 if exFunction:
 
-    X = np.array(([3,5], [5,1], [5,2]), dtype=float);
+    X = np.array(([3,5], [5,1], [10,2]), dtype=float);
     y = np.array(([75], [82], [93]), dtype=float);
     
     testX = np.array(([4, 5.5], [4.5,1], [9,2.5], [6, 2]), dtype=float);
     testY = np.array(([70], [89], [85], [75]), dtype=float);
-
-
 
 if testFunction:
     
@@ -49,13 +47,13 @@ y = y/yScale;
 testX = testX/xScale;
 testY = testY/yScale;
 
-dimX = len(X.T);
-dimY = len(y.T);
-n = 10;
+# Network Parameters
+dimX = len(X.T);     # dimension of input data
+dimY = len(y.T);     # dimenstion of output data
+n = 10;              # number of neurons in hidden layer
+regParam = 1e-5;     # regularization hyperparameter
 
-print X, y
-
-NN = Neural_Network(dimX, dimY, n, 1e-4);
+NN = Neural_Network(dimX, dimY, n, regParam);
 T = trainer(NN);
 
 T.train(X, y, testX, testY);
@@ -111,7 +109,7 @@ if plot:
         xx = np.dot(hoursSleep.reshape(100,1), np.ones((1,100))).T
     
         pl.figure();
-        CS = pl.contour(xx,yy,100*allOutputs.reshape(100, 100))
+        CS = pl.contour(xx,yy,yScale*allOutputs.reshape(100, 100))
         pl.clabel(CS, inline=1, fontsize=10)
         pl.xlabel('Hours Sleep')
         pl.ylabel('Hours Study')
@@ -123,11 +121,10 @@ if plot:
         ax = fig.gca(projection='3d')
 
         #Scatter training examples:
-        ax.scatter(xScale[0]*X[:,0], xScale[1]*X[:,1], 100*y, c='b', alpha = 1, s=30)
-        #ax.scatter(10*testX[:,0], 5*testX[:,1], 100*testY, c='r', alpha = 1, s=30)
+        ax.scatter(xScale[0]*X[:,0], xScale[1]*X[:,1], yScale*y, c='b', alpha = 1, s=30)
+        ax.scatter(xScale[0]*testX[:,0], xScale[1]*testX[:,1], yScale*testY, c='r', alpha = 1, s=30)
 
-
-        surf = ax.plot_surface(xx, yy, 100*allOutputs.reshape(100, 100), \
+        surf = ax.plot_surface(xx, yy, yScale*allOutputs.reshape(100, 100), \
                                cmap='jet', alpha = 0.5)
 
 
