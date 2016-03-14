@@ -14,7 +14,7 @@ gradTest = 0;
 
 if exFunction:
 
-    X = np.array(([3,5], [5,1], [10,2]), dtype=float);
+    X = np.array(([3,5], [5,1], [5,2]), dtype=float);
     y = np.array(([75], [82], [93]), dtype=float);
     
     testX = np.array(([4, 5.5], [4.5,1], [9,2.5], [6, 2]), dtype=float);
@@ -24,16 +24,13 @@ if exFunction:
 
 if testFunction:
     
-    X = np.array([[3], [7], [1], [2]])
+    X = np.linspace(-10, 10, 6);
     X = np.reshape(X, (len(X), 1));
-    y = X*X + np.random.randn(4, 1);
-    print y
+    y = X*X + np.random.randn(len(X), 1);
     
-    testX = np.array([[-2], [10], [5], [-3]])
+    testX = np.random.uniform(-10, 10, 10);
     testX = np.reshape(testX, (len(testX), 1));
     testY = testX*testX;
-    
-    
 
 print X.shape, type(X)
 print testX.shape, type(testX)
@@ -50,15 +47,19 @@ testY = testY/yScale;
 
 dimX = len(X.T);
 dimY = len(y.T);
-n = 4;
+n = 10;
+
+print X, y
 
 NN = Neural_Network(dimX, dimY, n, 1e-4);
 T = trainer(NN);
 
 T.train(X, y, testX, testY);
 
-chiSq = sum((y - NN.forward(X))**2);
-print 'Estimated Chi-Squared Goodness of fit:', chiSq;
+chiSqTrain = sum((y - NN.forward(X))**2);
+chiSqTest = sum((testY - NN.forward(testX))**2);
+print 'Estimated Chi-Squared Goodness of fit (training):', chiSqTrain;
+print 'Estimated Chi-Squared Goodness of fit (testing):', chiSqTest;
 
 if gradTest:
     grad = NN.computeGradients(X, y);
