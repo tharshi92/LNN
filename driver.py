@@ -1,3 +1,7 @@
+# 3 layer Neural network attempts to fit two sets of training data
+# Fit is tested with testing data
+# Coded by Tharshi Srikannathasan tsrikann@physics.utoronto.ca
+
 import numpy as np
 from scipy import optimize
 import pylab as pl
@@ -5,10 +9,10 @@ from NN import Neural_Network, computeNumericalGradient, trainer
 
 # Options
 
-plot = 1;
-testFunction = 1;
-exFunction = 0;
-gradTest = 0;
+plot = 1;           # turn on plots of cost, fit, and contour plots
+testFunction = 1;   # use the tes function and np.linspace() to generate training and data
+exFunction = 0;     # use hand typed data to create training and testing data
+gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical                          gradient
 
 # create data (problem spot)
 
