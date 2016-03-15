@@ -10,34 +10,36 @@ from NN import Neural_Network, computeNumericalGradient, trainer
 # Options
 
 plot = 1;           # turn on plots of cost, fit, and contour plots
-testFunction = 0;   # use the test function and np.linspace() to generate training and data (** PROBLEM **)
-exFunction = 1;     # use hand typed data to create training and testing data
+testFunction = 1;   # use the test function and np.linspace() to generate training and data (** PROBLEM **)
+exFunction = 0;     # use hand typed data to create training and testing data
 gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical                          gradient
 
 # create data (problem spot)
 
 if exFunction:
 
-    X = np.array(([3,5], [5,1], [10,2]), dtype=float);
+    X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float);
     y = np.array(([75], [82], [93]), dtype=float);
     
-    testX = np.array(([4, 5.5], [4.5,1], [9,2.5], [6, 2]), dtype=float);
+    testX = np.array(([4, 5.5], [4.5, 1], [9, 2.5], [6, 2]), dtype=float);
     testY = np.array(([70], [89], [85], [75]), dtype=float);
 
 if testFunction:
     
-    X = np.linspace(-10, 10, 6);
-    X = np.reshape(X, (len(X), 1));
-    y = X*X + np.random.randn(len(X), 1);
+    sigErr = 0.64;
     
-    testX = np.random.uniform(-10, 10, 10);
+    X = np.linspace(0, 10, 20);
+    X = np.reshape(X, (len(X), 1));
+    y = np.log(X**2 + 1) + sigErr*np.random.randn(len(X), 1);
+    
+    testX = np.random.uniform(0, 10, 10);
     testX = np.reshape(testX, (len(testX), 1));
-    testY = testX*testX;
+    testY = np.log(testX**2 + 1) + sigErr*np.random.randn(len(testX), 1);
 
-print X.shape, type(X)
-print testX.shape, type(testX)
-print y.shape, type(y)
-print testY.shape, type(testY)
+# print X.shape, type(X)
+# print testX.shape, type(testX)
+# print y.shape, type(y)
+# print testY.shape, type(testY)
     
 # Normalize Data
 xScale = np.amax(X, axis=0);
@@ -51,8 +53,8 @@ testY = testY/yScale;
 # Network Parameters
 dimX = len(X.T);     # dimension of input data
 dimY = len(y.T);     # dimenstion of output data
-n = 10;              # number of neurons in hidden layer
-regParam = 1e-4;     # regularization hyperparameter
+n = 13;              # number of neurons in hidden layer
+regParam = 1e-6;     # regularization hyperparameter
 
 # create network
 NN = Neural_Network(dimX, dimY, n, regParam);
@@ -91,9 +93,10 @@ if plot:
     pl.legend()
     
     if exFunction:
+        numPoints = 100;
         #Test network for various combinations of sleep/study:
-        hoursSleep = np.linspace(0, 10, 100)
-        hoursStudy = np.linspace(0, 5, 100)
+        hoursSleep = np.linspace(-xScale[0], xScale[0], numPoints)
+        hoursStudy = np.linspace(-xScale[1], xScale[1], numPoints)
 
         #Normalize data (same way training data was normalized)
         in1Norm = hoursSleep/xScale[0];
@@ -110,11 +113,11 @@ if plot:
         allOutputs = NN.forward(allInputs)
 
         #Contour Plot:
-        yy = np.dot(hoursStudy.reshape(100,1), np.ones((1,100)))
-        xx = np.dot(hoursSleep.reshape(100,1), np.ones((1,100))).T
+        yy = np.dot(hoursStudy.reshape(numPoints, 1), np.ones((1, numPoints)))
+        xx = np.dot(hoursSleep.reshape(numPoints, 1), np.ones((1, numPoints))).T
     
         pl.figure();
-        CS = pl.contour(xx,yy,yScale*allOutputs.reshape(100, 100))
+        CS = pl.contour(xx,yy,yScale*allOutputs.reshape(numPoints, numPoints))
         pl.clabel(CS, inline=1, fontsize=10)
         pl.xlabel('Hours Sleep')
         pl.ylabel('Hours Study')
@@ -130,9 +133,8 @@ if plot:
         ax.scatter(xScale[0]*X[:,0], xScale[1]*X[:,1], yScale*y, c='b', alpha = 1, s=30)
         ax.scatter(xScale[0]*testX[:,0], xScale[1]*testX[:,1], yScale*testY, c='r', alpha = 1, s=30)
 
-        surf = ax.plot_surface(xx, yy, yScale*allOutputs.reshape(100, 100), \
+        surf = ax.plot_surface(xx, yy, yScale*allOutputs.reshape(numPoints, numPoints), \
                                cmap='jet', alpha = 0.5)
-
 
         ax.set_xlabel('Hours Sleep')
         ax.set_ylabel('Hours Study')
@@ -143,12 +145,15 @@ if plot:
     if testFunction:
         # test network for various combinations
         numPoints = 100;
-        x0 = np.linspace(-xScale, xScale, numPoints);
+        x0 = np.linspace(-xScale[0], xScale[0], numPoints);
         x0 = np.reshape(x0, (len(x0), 1));
+        
         # normalize data (same way training data was normalized)
         x0 = x0/xScale;
+        
         # forward prop through network with trained weights
         fit = NN.forward(x0);
+        
         # plot
         pl.figure();
         pl.scatter(xScale[0]*X[:, 0], yScale*y, c='b', marker = 'o');
