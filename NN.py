@@ -1,28 +1,30 @@
-# 3 layer Neural network attempts to fit two sets of training data
-# Fit is tested with testing data
+# 3 layer Neural network attempts to fit training data
 # Coded by Tharshi Srikannathasan tsrikann@physics.utoronto.ca
 #
 # Version 1 (0216)
-#    3 Layer Net with regularization and minimization via python.optimize 'BFGS' method
-#        Problems: Fitting functions that have concavity similar to even polynomials
-        
+#     3 Layer Net with regularization and minimization via python.optimize 'BFGS' method
+#     Problems: Fitting functions that have concavity similar to even polynomials
+# Version 2 (031516)
+#     Added bias weights
+
 
 import numpy as np
 from scipy import optimize
 import pylab as pl
 
 class Neural_Network(object):
-    def __init__(self, dimX, dimY, m, Lambda=0):        
-        #Define Hyperparameters
+    def __init__(self, dimX, dimY, m, Lambda=0):    
+            
+        # Define Hyperparameters
         self.inputLayerSize = dimX
         self.outputLayerSize = dimY
         self.hiddenLayerSize = m
         
-        #Weights (parameters)
-        self.W1 = np.array(np.random.randn(self.inputLayerSize,self.hiddenLayerSize))
-        self.W2 = np.array(np.random.randn(self.hiddenLayerSize,self.outputLayerSize))
+        # Weights (parameters)
+        self.W1 = 1 * np.array(np.random.randn(self.inputLayerSize,self.hiddenLayerSize))
+        self.W2 = 1 * np.array(np.random.randn(self.hiddenLayerSize,self.outputLayerSize))
         
-        #Regularization Parameter:
+        # Regularization Parameter:
         self.Lambda = Lambda
         
         print '';
@@ -37,7 +39,7 @@ class Neural_Network(object):
         print ''
         
     def forward(self, X):
-        #Propogate inputs though network
+        # Propogate inputs though network
         self.z2 = np.dot(X, self.W1)
         self.a2 = self.sigmoid(self.z2)
         self.z3 = np.dot(self.a2, self.W2)
@@ -45,41 +47,41 @@ class Neural_Network(object):
         return yHat
         
     def sigmoid(self, z):
-        #Apply sigmoid activation function to scalar, vector, or matrix
+        # Apply sigmoid activation function to scalar, vector, or matrix
         return 1.0/(1.0 + np.exp(-z));
     
     def sigmoidPrime(self,z):
-        #Gradient of sigmoid
+        # Gradient of sigmoid
         return np.exp(-z)/((1+np.exp(-z))**2)
     
     def costFunction(self, X, y):
-        #Compute cost for given X,y, use weights already stored in class.
+        # Compute cost for given X,y, use weights already stored in class.
         self.yHat = self.forward(X)
         J = 0.5*sum((y-self.yHat)**2)/X.shape[0] + (self.Lambda/2)*(np.linalg.norm(self.W1)**2.0 + np.linalg.norm(self.W2)**2.0);
         return J
         
     def costFunctionPrime(self, X, y):
-        #Compute derivative with respect to W and W2 for a given X and y:
+        # Compute derivative with respect to W and W2 for a given X and y:
         self.yHat = self.forward(X)
         
         delta3 = np.multiply(-(y-self.yHat), self.sigmoidPrime(self.z3))
-        #Add gradient of regularization term:
+        # Add gradient of regularization term:
         dJdW2 = np.dot(self.a2.T, delta3)/X.shape[0] + self.Lambda*self.W2
         
         delta2 = np.dot(delta3, self.W2.T)*self.sigmoidPrime(self.z2)
-        #Add gradient of regularization term:
+        # Add gradient of regularization term:
         dJdW1 = np.dot(X.T, delta2)/X.shape[0] + self.Lambda*self.W1
         
         return dJdW1, dJdW2
     
-    #Helper functions for interacting with other methods/classes
+    # Helper functions for interacting with other methods/classes
     def getParams(self):
-        #Get W1 and W2 Rolled into vector:
+        # Get W1 and W2 Rolled into vector:
         params = np.concatenate((self.W1.ravel(), self.W2.ravel()))
         return params
     
     def setParams(self, params):
-        #Set W1 and W2 using single parameter vector:
+        # Set W1 and W2 using single parameter vector:
         W1_start = 0
         W1_end = self.hiddenLayerSize*self.inputLayerSize
         self.W1 = np.reshape(params[W1_start:W1_end], \
@@ -96,10 +98,10 @@ def computeNumericalGradient(N, X, y):
         paramsInitial = N.getParams()
         numgrad = np.zeros(paramsInitial.shape)
         perturb = np.zeros(paramsInitial.shape)
-        e = 1e-4
+        e = 1e-5
 
         for p in range(len(paramsInitial)):
-            #Set perturbation vector
+            # Set perturbation vector
             perturb[p] = e
             N.setParams(paramsInitial + perturb)
             loss2 = N.costFunction(X, y)
@@ -107,20 +109,21 @@ def computeNumericalGradient(N, X, y):
             N.setParams(paramsInitial - perturb)
             loss1 = N.costFunction(X, y)
 
-            #Compute Numerical Gradient
+            # Compute Numerical Gradient
             numgrad[p] = (loss2 - loss1) / (2*e)
 
-            #Return the value we changed to zero:
+            # Return the value we changed to zero:
             perturb[p] = 0
             
-        #Return Params to original value:
+        # Return Params to original value:
         N.setParams(paramsInitial)
 
         return numgrad 
         
 class trainer(object):
+    
     def __init__(self, N):
-        #Make Local reference to network:
+        # Make Local reference to network:
         self.N = N
         
     def callbackF(self, params):
@@ -139,20 +142,20 @@ class trainer(object):
         return grad
         
     def train(self, trainX, trainY, testX, testY):
-        #Make an internal variable for the callback function:
+        # Make an internal variable for the callback function:
         self.X = trainX
         self.y = trainY
         
         self.testX = testX
         self.testY = testY
 
-        #Make empty list to store training costs:
+        # Make empty list to store training/testing costs:
         self.J = []
         self.testJ = []
         
         params0 = self.N.getParams()
 
-        options = {'maxiter': 200, 'disp' : True}
+        options = {'maxiter': 1000, 'disp' : True}
         _res = optimize.minimize(self.costWrapper, params0, jac=self.costGradWrapper, method='BFGS', \
                                  args=(trainX, trainY), options=options, callback=self.callbackF)
 
@@ -191,33 +194,20 @@ class trainer(object):
 if __name__ == '__main__':
     
     # Options
+    plot = 1            # turn on plots of cost and fit
+    gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical gradient
 
-    plot = 1;           # turn on plots of cost, fit, and contour plots
-    testFunction = 1;   # use the test function and np.linspace() to generate training and data (** PROBLEM **)
-    exFunction = 0;     # use hand typed data to create training and testing data
-    gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical                          gradient
-
-    # create data (problem spot)
-
-    if exFunction:
-
-        X = np.array(([3, 5], [5, 1], [10, 2]), dtype=float);
-        y = np.array(([75], [82], [93]), dtype=float);
+    # create data 
     
-        testX = np.array(([4, 5.5], [4.5, 1], [9, 2.5], [6, 2]), dtype=float);
-        testY = np.array(([70], [89], [85], [75]), dtype=float);
+    sigErr = 0;
 
-    if testFunction:
-    
-        sigErr = 0.04;
-    
-        X = np.linspace(-1, 1, 20);
-        X = np.reshape(X, (len(X), 1));
-        y = X + sigErr*np.random.randn(len(X), 1);
-    
-        testX = np.random.uniform(-1, 1, 10);
-        testX = np.reshape(testX, (len(testX), 1));
-        testY = testX + sigErr*np.random.randn(len(testX), 1);
+    X = np.linspace(-2, 2, 20);
+    X = np.reshape(X, (len(X), 1));
+    y = X**2 - X + 1 + sigErr*np.random.randn(len(X), 1);
+
+    testX = np.random.uniform(-2, 2, 20);
+    testX = np.reshape(testX, (len(testX), 1));
+    testY = testX**2 - testX + 1 + sigErr*np.random.randn(len(testX), 1);
 
     # print X.shape, type(X)
     # print testX.shape, type(testX)
@@ -225,8 +215,8 @@ if __name__ == '__main__':
     # print testY.shape, type(testY)
     
     # Normalize Data
-    xScale = np.amax(X, axis=0);
-    yScale = np.amax(y, axis=0);
+    xScale = np.amax(np.abs(X), axis=0);
+    yScale = np.amax(np.abs(y), axis=0);
 
     X = X/xScale;
     y = y/yScale;
@@ -236,7 +226,7 @@ if __name__ == '__main__':
     # Network Parameters
     dimX = len(X.T);     # dimension of input data
     dimY = len(y.T);     # dimenstion of output data
-    n = 300;              # number of neurons in hidden layer
+    n = 5;              # number of neurons in hidden layer
     regParam = 1e-5;     # regularization hyperparameter
 
     # create network
@@ -266,85 +256,35 @@ if __name__ == '__main__':
         print np.linalg.norm(grad - numGrad)/np.linalg.norm(grad + numGrad), '<- this should be less than 1e-6'
         print '-----------------------------------------------------'
         print ''
+
     if plot:
-        pl.figure()
+
+        pl.figure();
         pl.plot(T.J, label='Training Cost')
         pl.grid(1)
         pl.plot(T.testJ, label='Testing Cost')
         pl.xlabel('iteration')
         pl.title('Cost Functions')
         pl.legend()
-    
-        if exFunction:
-            numPoints = 100;
-            #Test network for various combinations of sleep/study:
-            hoursSleep = np.linspace(-xScale[0], xScale[0], numPoints)
-            hoursStudy = np.linspace(-xScale[1], xScale[1], numPoints)
 
-            #Normalize data (same way training data was normalized)
-            in1Norm = hoursSleep/xScale[0];
-            in2Norm = hoursStudy/xScale[1];
+        # test network for various combinations
+        numPoints = 100;
+        x0 = np.linspace(-xScale[0], xScale[0], numPoints);
+        x0 = np.reshape(x0, (len(x0), 1));
 
-            #Create 2-d versions of input for plotting
-            a, b  = np.meshgrid(in1Norm, in2Norm)
+        # normalize data (same way training data was normalized)
+        x0 = x0/xScale;
 
-            #Join into a single input matrix:
-            allInputs = np.zeros((a.size, 2))
-            allInputs[:, 0] = a.ravel()
-            allInputs[:, 1] = b.ravel()
-    
-            allOutputs = NN.forward(allInputs)
+        # forward prop through network with trained weights
+        fit = NN.forward(x0);
 
-            #Contour Plot:
-            yy = np.dot(hoursStudy.reshape(numPoints, 1), np.ones((1, numPoints)))
-            xx = np.dot(hoursSleep.reshape(numPoints, 1), np.ones((1, numPoints))).T
-    
-            pl.figure();
-            CS = pl.contour(xx,yy,yScale*allOutputs.reshape(numPoints, numPoints))
-            pl.clabel(CS, inline=1, fontsize=10)
-            pl.xlabel('Hours Sleep')
-            pl.ylabel('Hours Study')
-            pl.title('Contour Plot of Fit')
-    
-            #3D plot:
+        pl.figure();
+        pl.scatter(xScale[0]*X[:, 0], yScale*y, c='b', marker = 'o');
+        pl.scatter(xScale[0]*testX[:,0], yScale*testY, c='r', marker = 'o');
+        pl.plot(x0*xScale, yScale*fit);
+        pl.xlabel('x0');
+        pl.ylabel('y');
+        pl.title('Fit of Data')
+        print ''
 
-            from mpl_toolkits.mplot3d import Axes3D
-            fig = pl.figure()
-            ax = fig.gca(projection='3d')
-
-            #Scatter training examples:
-            ax.scatter(xScale[0]*X[:,0], xScale[1]*X[:,1], yScale*y, c='b', alpha = 1, s=30)
-            ax.scatter(xScale[0]*testX[:,0], xScale[1]*testX[:,1], yScale*testY, c='r', alpha = 1, s=30)
-
-            surf = ax.plot_surface(xx, yy, yScale*allOutputs.reshape(numPoints, numPoints), \
-                                   cmap='jet', alpha = 0.5)
-
-            ax.set_xlabel('Hours Sleep')
-            ax.set_ylabel('Hours Study')
-            ax.set_zlabel('Test Score')
-            ax.set_title('Data Fit')
-
-
-        if testFunction:
-            # test network for various combinations
-            numPoints = 100;
-            x0 = np.linspace(-xScale[0], xScale[0], numPoints);
-            x0 = np.reshape(x0, (len(x0), 1));
-        
-            # normalize data (same way training data was normalized)
-            x0 = x0/xScale;
-        
-            # forward prop through network with trained weights
-            fit = NN.forward(x0);
-        
-            # plot
-            pl.figure();
-            pl.scatter(xScale[0]*X[:, 0], yScale*y, c='b', marker = 'o');
-            pl.scatter(xScale[0]*testX[:,0], yScale*testY, c='r', marker = 'o');
-            pl.plot(x0*xScale, yScale*fit);
-            pl.xlabel('x0');
-            pl.ylabel('y');
-            pl.title('Fit of Data')
-            print ''
-    
         pl.show();
