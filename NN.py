@@ -155,7 +155,7 @@ class trainer(object):
         
         params0 = self.N.getParams()
 
-        options = {'maxiter': 1000, 'disp' : True}
+        options = {'maxiter': 10000, 'disp' : True}
         _res = optimize.minimize(self.costWrapper, params0, jac=self.costGradWrapper, method='BFGS', \
                                  args=(trainX, trainY), options=options, callback=self.callbackF)
 
@@ -196,69 +196,140 @@ if __name__ == '__main__':
     # Options
     plot = 1            # turn on plots of cost and fit
     gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical gradient
-
-    # create data 
+    regression = 0;     # 1 -> regression, 0 -> simple classification
     
-    sigErr = 0;
-
-    X = np.linspace(-2, 2, 20);
-    X = np.reshape(X, (len(X), 1));
-    y = X**2 - X + 1 + sigErr*np.random.randn(len(X), 1);
-
-    testX = np.random.uniform(-2, 2, 20);
-    testX = np.reshape(testX, (len(testX), 1));
-    testY = testX**2 - testX + 1 + sigErr*np.random.randn(len(testX), 1);
-
-    # print X.shape, type(X)
-    # print testX.shape, type(testX)
-    # print y.shape, type(y)
-    # print testY.shape, type(testY)
+    if regression:
     
-    # Normalize Data
-    xScale = np.amax(np.abs(X), axis=0);
-    yScale = np.amax(np.abs(y), axis=0);
+        # create data 
+    
+        sigErr = 0;
 
-    X = X/xScale;
-    y = y/yScale;
-    testX = testX/xScale;
-    testY = testY/yScale;
+        X = np.linspace(-1, 1, 10);
+        X = np.reshape(X, (len(X), 1));
+        y = np.log(X**2 + 1) + sigErr*np.random.randn(len(X), 1);
 
-    # Network Parameters
-    dimX = len(X.T);     # dimension of input data
-    dimY = len(y.T);     # dimenstion of output data
-    n = 5;              # number of neurons in hidden layer
-    regParam = 1e-5;     # regularization hyperparameter
+        testX = np.random.uniform(-1, 1, 10);
+        testX = np.reshape(testX, (len(testX), 1));
+        testY = np.log(testX**2 + 1) + sigErr*np.random.randn(len(testX), 1);
 
-    # create network
-    NN = Neural_Network(dimX, dimY, n, regParam);
-    T = trainer(NN);
+        # print X.shape, type(X)
+        # print testX.shape, type(testX)
+        # print y.shape, type(y)
+        # print testY.shape, type(testY)
+    
+        # Normalize Data
+        xScale = np.amax(np.abs(X), axis=0);
+        yScale = np.amax(np.abs(y), axis=0);
 
-    # train network
-    T.train(X, y, testX, testY);
+        X = X/xScale;
+        y = y/yScale;
+        testX = testX/xScale;
+        testY = testY/yScale;
 
-    # output statistics
-    chiSqTrain = sum((y - NN.forward(X))**2);
-    chiSqTest = sum((testY - NN.forward(testX))**2);
+        # Network Parameters
+        dimX = len(X.T);     # dimension of input data
+        dimY = len(y.T);     # dimenstion of output data
+        n = 500;              # number of neurons in hidden layer
+        regParam = 1e-5;     # regularization hyperparameter
 
-    print 'Estimated Chi-Squared Goodness of fit (training):', chiSqTrain;
-    print 'Estimated Chi-Squared Goodness of fit (testing):', chiSqTest;
+        # create network
+        NN = Neural_Network(dimX, dimY, n, regParam);
+        T = trainer(NN);
 
-    if gradTest:
-        grad = NN.computeGradients(X, y);
-        numGrad = computeNumericalGradient(NN, X, y);
-        print ''
-        print '-----------------------------------------------------'
-        print 'Gradient Checking'
-        print 'numGrad: ', numGrad
-        print ''
-        print 'grad: ', grad
-        print ''
-        print np.linalg.norm(grad - numGrad)/np.linalg.norm(grad + numGrad), '<- this should be less than 1e-6'
-        print '-----------------------------------------------------'
-        print ''
+        # train network
+        T.train(X, y, testX, testY);
 
-    if plot:
+        # output statistics
+        errTrain = sum((y - NN.forward(X))**2);
+        errTest = sum((testY - NN.forward(testX))**2);
 
+        print 'Estimated Error of fit (training):', errTrain;
+        print 'Estimated Error of fit (testing):', errTest;
+
+        if gradTest:
+            grad = NN.computeGradients(X, y);
+            numGrad = computeNumericalGradient(NN, X, y);
+            print ''
+            print '-----------------------------------------------------'
+            print 'Gradient Checking'
+            print 'numGrad: ', numGrad
+            print ''
+            print 'grad: ', grad
+            print ''
+            print np.linalg.norm(grad - numGrad)/np.linalg.norm(grad + numGrad), '<- this should be less than 1e-6'
+            print '-----------------------------------------------------'
+            print ''
+
+        if plot:
+
+            pl.figure();
+            pl.plot(T.J, label='Training Cost')
+            pl.grid(1)
+            pl.plot(T.testJ, label='Testing Cost')
+            pl.xlabel('iteration')
+            pl.title('Cost Functions')
+            pl.legend()
+
+            # test network for various combinations
+            numPoints = 100;
+            x0 = np.linspace(-xScale[0], xScale[0], numPoints);
+            x0 = np.reshape(x0, (len(x0), 1));
+
+            # normalize data (same way training data was normalized)
+            x0 = x0/xScale;
+
+            # forward prop through network with trained weights
+            fit = NN.forward(x0);
+
+            pl.figure();
+            pl.scatter(xScale[0]*X[:, 0], yScale*y, c='b', marker = 'o');
+            pl.scatter(xScale[0]*testX[:,0], yScale*testY, c='r', marker = 'o');
+            pl.plot(x0*xScale, yScale*fit);
+            pl.xlabel('x0');
+            pl.ylabel('y');
+            pl.title('Fit of Data')
+            print ''
+
+            pl.show();
+            
+    else:
+        
+        #
+        # create data
+        #
+        
+        X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype = 'float');
+        y = np.array([[1], [0], [0], [1]], dtype = 'float');
+        
+        testX = np.array([[0.1, 0.2], [0.3, 0.8], [0.9, 0.4], [0.7, 0.9]], dtype = 'float');
+        testY = np.array([[1], [0], [0], [1]], dtype = 'float');
+        
+        #
+        # Network Parameters
+        #
+        
+        dimX = len(X.T);     # dimension of input data
+        dimY = len(y.T);     # dimenstion of output data
+        n = 5;              # number of neurons in hidden layer
+        regParam = 1e-4;     # regularization hyperparameter
+        
+        #
+        # create network
+        #
+        
+        NN = Neural_Network(dimX, dimY, n, regParam);
+        T = trainer(NN);
+
+        # train network
+        T.train(X, y, testX, testY);
+        
+        fit = np.round(NN.forward(X));
+        fitTest = np.round(NN.forward(testX));
+        
+        print fit;
+        print '';
+        print fitTest;
+        
         pl.figure();
         pl.plot(T.J, label='Training Cost')
         pl.grid(1)
@@ -267,24 +338,7 @@ if __name__ == '__main__':
         pl.title('Cost Functions')
         pl.legend()
 
-        # test network for various combinations
-        numPoints = 100;
-        x0 = np.linspace(-xScale[0], xScale[0], numPoints);
-        x0 = np.reshape(x0, (len(x0), 1));
-
-        # normalize data (same way training data was normalized)
-        x0 = x0/xScale;
-
-        # forward prop through network with trained weights
-        fit = NN.forward(x0);
-
-        pl.figure();
-        pl.scatter(xScale[0]*X[:, 0], yScale*y, c='b', marker = 'o');
-        pl.scatter(xScale[0]*testX[:,0], yScale*testY, c='r', marker = 'o');
-        pl.plot(x0*xScale, yScale*fit);
-        pl.xlabel('x0');
-        pl.ylabel('y');
-        pl.title('Fit of Data')
-        print ''
-
         pl.show();
+        
+        
+        

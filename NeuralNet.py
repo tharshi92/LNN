@@ -32,7 +32,7 @@ class BackPropagationNetwork:
         
         # Create the weights (using slicing)
         for (l1, l2) in zip(layerSize[:-1], layerSize[1:]):
-            self.weights.append(np.random.normal(scale = 0.1, size = (l2, l1 + 1)));
+            self.weights.append(np.random.normal(scale = 1, size = (l2, l1 + 1)));
     
     #
     # Forward propagation method (Run it!)
@@ -115,21 +115,21 @@ class BackPropagationNetwork:
 #
 if __name__ == '__main__':
     print 'Test Neural Network on y = x^2 for -1 < x < 1'
-    bpn = BackPropagationNetwork((1, 3, 1));
+    bpn = BackPropagationNetwork((1, 3, 3, 1));
     print 'Network Structure:\n{0}\n'.format(bpn.shape);
     # print 'Initial Weights:\n{0}\n'.format(bpn.weights);
     
     lvInput = np.linspace(-1, 1, 50);
-    lvTarget = lvInput**1;
+    lvTarget = lvInput**2;
     
-    maxIter = int(1e5) + 1;
+    maxIter = int(10000) + 1;
     minErr = 1e-5;
     cost = np.zeros(maxIter);
     
     for i in range(maxIter):
-        err = bpn.trainEpoch(lvInput, lvTarget);
+        err = bpn.trainEpoch(lvInput, lvTarget, 0.01);
         cost[i] = err;
-        if i % 5000 == 0:
+        if i % 100000 == 0:
             print 'Iteration {0}\tError: {1:0.6f}'.format(i, err);
         if i == maxIter - 1:
             print 'Gradient Descent has reached the maximum number of iterations:'
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     
     fig0 = pl.figure();
     pl.plot(lvInput, lvOutput);
-    pl.plot(lvInput, lvTarget, '*-');
+    pl.plot(lvInput, lvTarget, '.-');
     pl.grid(1);
     
     figCost = pl.figure();
