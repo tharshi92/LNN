@@ -3,7 +3,10 @@
 # Inspired by Welch Labs
 #
 # V1 March 14th 2016:
-#           basic feed forward network with gradient descent minimization
+#     basic feed forward network with gradient descent (rate defaults to 0.1) minimization
+#
+# V2 March 22nd 2016:
+#     added momentum (defaults to 0.5) and fixed scaling issues
 
 #
 # imports
@@ -29,10 +32,12 @@ class BackPropagationNetwork:
         # Input/Output data from last run
         self._layerInput = [];
         self._layerOutput = [];
+        self._previousWeightDelta = [];
         
         # Create the weights (using slicing)
         for (l1, l2) in zip(layerSize[:-1], layerSize[1:]):
             self.weights.append(np.random.normal(scale = 1, size = (l2, l1 + 1)));
+            self._previousWeightDelta.append(np.zeros((l2, l1 +1)));
     
     #
     # Forward propagation method (Run it!)
@@ -63,7 +68,7 @@ class BackPropagationNetwork:
     #
     # backpropagation method (TRAINING DAY!)
     #
-    def trainEpoch(self, input, target, trainingRate = 0.1):
+    def trainEpoch(self, input, target, trainingRate = 0.1, momentum = 0.5):
         '''This method trains the network for one epoch'''
         
         delta = [];
@@ -94,10 +99,13 @@ class BackPropagationNetwork:
                 layerOutput = np.vstack([self._layerOutput[i - 1], \
                                 np.ones([1, self._layerOutput[i - 1].shape[1]])]);
             
-            weightDelta = np.sum(layerOutput[None, :, :].transpose(2, 0, 1) * \
+            curWeightDelta = np.sum(layerOutput[None, :, :].transpose(2, 0, 1) * \
                             delta[delta_index][None, :, :].transpose(2, 1, 0), axis=0);
+                            
+            weightDelta = trainingRate*curWeightDelta + momentum*self._previousWeightDelta[i];
             
-            self.weights[i] -= trainingRate * weightDelta;
+            self.weights[i] -= weightDelta;
+            self._previousWeightDelta[i] = weightDelta;
             
         return error;
                 
@@ -125,7 +133,7 @@ if __name__ == '__main__':
     start = -np.pi;
     end = np.pi;
     input = np.linspace(start, end, 30);
-    target = np.sin(input**2);
+    target = np.sin(input);
     
     xShift = np.min(input)
     xNorm = np.max(input) - xShift;
@@ -137,7 +145,7 @@ if __name__ == '__main__':
     y = (target - yShift)/yNorm;
     
     xTest = np.random.uniform(start, end, 100);
-    yTest = np.sin(xTest**2) + 0.1*np.random.randn(np.size(xTest));
+    yTest = np.sin(xTest) + 0.1*np.random.randn(np.size(xTest));
     
     xTest = (xTest - xShift)/xNorm;
     yTest = (yTest - yShift)/yNorm;
@@ -147,7 +155,7 @@ if __name__ == '__main__':
     cost = [];
     
     for i in range(maxIter):
-        err = bpn.trainEpoch(X, y, 0.1);
+        err = bpn.trainEpoch(X, y, 1.0, 0.1);
         if i % 1e3 == 0:
             cost.append(err);
         if i % 1e3 == 0:
