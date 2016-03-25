@@ -1,12 +1,15 @@
 # Feed-Forward Neural Network with Backpropagation
 # Coded by Tharshi Sri tsrikann@physics.utoronto.ca
-# Inspired by Welch Labs
+# Inspired by Welch Labs and YouTube's Ryan Harris
 #
 # V1 March 14th 2016:
 #     basic feed forward network with gradient descent (rate defaults to 0.1) minimization
 #
 # V2 March 22nd 2016:
 #     added momentum (defaults to 0.5) and fixed scaling issues
+#
+# V3 March 23rd 2016:
+#     added classification example (XOR)
 
 #
 # imports
@@ -36,7 +39,7 @@ class BackPropagationNetwork:
         
         # Create the weights (using slicing)
         for (l1, l2) in zip(layerSize[:-1], layerSize[1:]):
-            self.weights.append(np.random.normal(scale = 1, size = (l2, l1 + 1)));
+            self.weights.append(np.random.normal(scale = 1.0, size = (l2, l1 + 1)));
             self._previousWeightDelta.append(np.zeros((l2, l1 +1)));
     
     #
@@ -123,17 +126,17 @@ class BackPropagationNetwork:
 #
 if __name__ == '__main__':
     
-    bpn = BackPropagationNetwork((1, 4, 2, 1));
+    bpn = BackPropagationNetwork((1, 10, 1));
      
     print 'Network Structure:\n{0}\n'.format(bpn.shape);
     print 'Training Via Gradient Descent.'
     
     # print 'Initial Weights:\n{0}\n'.format(bpn.weights);
     
-    start = -np.pi;
-    end = np.pi;
-    input = np.linspace(start, end, 30);
-    target = np.sin(input);
+    start = 0;
+    end = 2*np.pi;
+    input = np.linspace(start, end, 200);
+    target = np.cos(np.pi*input) - 1 + np.cos(4*input);
     
     xShift = np.min(input)
     xNorm = np.max(input) - xShift;
@@ -144,18 +147,18 @@ if __name__ == '__main__':
     X = (input - xShift)/xNorm;
     y = (target - yShift)/yNorm;
     
-    xTest = np.random.uniform(start, end, 100);
-    yTest = np.sin(xTest) + 0.1*np.random.randn(np.size(xTest));
+    xTest = np.random.uniform(start, end, 50);
+    yTest = np.cos(np.pi*xTest) - 1 + np.cos(4*xTest);
     
     xTest = (xTest - xShift)/xNorm;
     yTest = (yTest - yShift)/yNorm;
     
-    maxIter = int(100000) + 1;
+    maxIter = int(1e6) + 1;
     minErr = 1e-4;
     cost = [];
     
     for i in range(maxIter):
-        err = bpn.trainEpoch(X, y, 1.0, 0.1);
+        err = bpn.trainEpoch(X, y, 1e-1, 1e-2);
         if i % 1e3 == 0:
             cost.append(err);
         if i % 1e3 == 0:
@@ -166,11 +169,11 @@ if __name__ == '__main__':
         if err <= minErr:
             print 'Minimum error reached at iteration {0}'.format(i);
             break
+            
     cost = np.array(cost);
-    # print 'Final Weights:\n{0}\n'.format(bpn.weights);
     
     # Display Results
-    tempX = np.linspace(2*start, 2*end, 1000);
+    tempX = np.linspace(1.5*start, 1.5*end, 1e3);
     tempX = (tempX - xShift)/xNorm;
     
     tempY = bpn.forward(tempX);
@@ -180,23 +183,26 @@ if __name__ == '__main__':
     errTest = 0.5*np.sum((yTest - yHatTest)**2)/len(xTest);
     errTrain = 0.5*np.sum((y - yHat)**2)/len(X);
     
-    print 'Estimated goodness of fit (training):', errTrain;
-    print 'Estimated goodness of fit (testing):', errTest
+    print 'Final Cost (training):', errTrain;
+    print 'Final Cost (testing):', errTest;
     
     fig0 = pl.figure();
-    pl.plot(tempX*xNorm + xShift, tempY*yNorm + yShift);
-    pl.plot(input, target, 'ko');
+    pl.plot(tempX*xNorm + xShift, tempY*yNorm + yShift, label = 'fit');
+    pl.plot(input, target, label = 'data');
     pl.grid(1);
+    pl.title('Training Results');
     
     figCost = pl.figure();
-    pl.plot(np.log(cost + 1), '.-');
+    pl.plot(np.log(cost**2 + 1));
     pl.grid(1);
     pl.title('Cost Functions');
     pl.xlabel('Iteration');
-    pl.ylabel('Log(c^2 + 1)')
+    pl.ylabel('Log(c^2 + 1)');
     
-    figTest = pl.figure();
-    pl.plot(xTest*xNorm + xShift, yTest*yNorm + yShift, 'o');
-    pl.plot(xTest*xNorm + xShift, yHatTest*yNorm + yShift, 'o');
+    # figTest = pl.figure();
+    # pl.plot(xTest*xNorm + xShift, yTest*yNorm + yShift, 'o');
+    # pl.plot(xTest*xNorm + xShift, yHatTest*yNorm + yShift, 'o');
+    # pl.title('Testing Results');
+    # pl.grid(1);
     
     pl.show();
