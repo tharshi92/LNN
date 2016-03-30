@@ -1,92 +1,98 @@
 # Coded by Tharshi Srikannathasan March 2016
-# This is a 4th order Runge-Kutta Scheme to Solve the Lorentz Model with a Neural network to produce values of z
+# This is a 4th order Runge-Kutta Scheme to Solve the Lorentz Model
+# A Neural Network will be used to estimate dz/dt at every time step
+# The Runge-Kutta Method will be compared to the output of the neural network assisted simulation
 
 # import all needed libraries 
 import numpy as np;
 import pylab as pl;
 from mpl_toolkits.mplot3d import Axes3D;
-from Lorentz import Lorentz
+from NeuralNet.py import BackPropagationNetwork
 
-def Lorentz_RK_NN(x0, y0, z0, T, h):
+# define simulation parameters
+T = 4.0;    # simultion length
+h = 1e-2;    # timestep
+N = T/h;   # number of steps
 
-    # define simulation parameters
-    # T = 4.0;    # simultion length
-    #h = T/N;    # timestep
-    N = T/h;   # number of steps
+x = np.zeros(N);
+y = np.zeros(N);
+z = np.zeros(N);
+dX = np.zeros(N);
+dY = np.zeros(N);
+dZ = np.zeros(N);
 
-    x = np.zeros(N);
-    y = np.zeros(N);
-    z = np.zeros(N);
+# parameters for the lorentz model
+sigma = 10.0;
+beta = 8.0/3.0;
+rho = 28;
 
-    # parameters for the lorentz model
-    sigma = 10.0;
-    beta = 8.0/3.0;
-    rho = 28;
+# initial conditions
+x[0] = 1.0;
+y[0] = 1.0;
+z[0] = 0.0;
 
-    # initial conditions
-    x[0] = x0;
-    y[0] = y0;
-    z[0] = z0;
+# define dynamical equation
 
-    # define derivative functions
-
-    def x_prime(sigma, x, y, z):
+def dynamics(x, y, z, sigma, beta, rho):
     
-        return -sigma*(x - y);
+    dxdt = -sigma*(x - y);
     
-    def y_prime(rho, x, y, z):
+    dydt = x*(rho - z) - y;
     
-        return x*(rho - z) - y;
+    dzdt = x*y - beta*z;
     
-    def z_prime(beta, x, y, z):
-    
-        return x*y - beta*z;
-    
-    # integrate using Runge Kutta Method
+    return dxdt, dydt, dzdt;
 
-    for i in xrange(0, int(N - 1)):
-        
-        p1 = x_prime(sigma, x[i], y[i], z[i]);
-        q1 = y_prime(rho, x[i], y[i], z[i]); 
-        r1 = z_prime(beta, x[i], y[i], z[i]);
 
-        p2 = x_prime(sigma, x[i] + h*p1/2.0, y[i] + h*q1/2.0, z[i] + h*r1/2.0);
-        q2 = y_prime(rho, x[i] + h*p1/2.0, y[i] + h*q1/2.0, z[i] + h*r1/2.0);
-        r2 = z_prime(beta, x[i] + h*p1/2.0, y[i] + h*q1/2.0, z[i] + h*r1/2.0); 
+# define derivative functions
 
-        p3 = x_prime(sigma, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
-        q3 = y_prime(rho, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
-        r3 = z_prime(beta, x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0); 
+def x_prime(sigma, x, y, z):
 
-        p4 = x_prime(sigma, x[i] + h*p3, y[i] + h*q3, z[i] + h*r3);
-        q4 = y_prime(rho, x[i] + h*p3, y[i] + h*q3, z[i] + h*r3); 
-        r4 = z_prime(beta, x[i] + h*p3, y[i] + h*q3, z[i] + h*r3);
+    return -sigma*(x - y);
 
-        x[i+1] = x[i] + h*(p1 + 2.0*p2 + 2.0*p3 + p4)/6.0;
-        y[i+1] = y[i] + h*(q1 + 2.0*q2 + 2.0*q3 + q4)/6.0;
-        z[i+1] = z[i] + h*(r1 + 2.0*r2 + 2.0*r3 + r4)/6.0;
+def y_prime(rho, x, y, z):
 
-    # return dynamical signal
-    
-    dynamics = Lorentz(x, y, z);
-    
-    # plot results
-    
-    # pl.figure(1);
-    # pl.plot(x, '-.', label='x');
-    # pl.plot(y, '-.', label='y');
-    # pl.plot(z, '-.', label='z');
-    # pl.legend();
-    # pl.xlabel("timestep");
-    #
-    # fig = pl.figure();
-    # ax = fig.add_subplot(111, projection='3d');
-    # ax.scatter(x, y, z);
-    #
-    # ax.set_xlabel('X');
-    # ax.set_ylabel('Y');
-    # ax.set_zlabel('Z');
-    #
-    # pl.show();
+    return x*(rho - z) - y;
 
-    return x, y, z, dynamics;
+def z_prime(beta, x, y, z):
+
+    return x*y - beta*z;
+
+# integrate using Runge Kutta Method
+
+for i in xrange(0, int(N - 1)):
+
+    p1, q1, r1 = dynamics(x[i], y[i], z[i], sigma, beta, rho);
+    dX[i] = p1;
+    dY[i] = q1;
+    dZ[i] = r1;
+
+    p2, q2, r2 = dynamics(x[i] + h*p1/2.0, y[i] + h*q1/2.0, z[i] + h*r1/2.0,\
+                          sigma, beta, rho);
+    p3, q3, r3 = dynamics(x[i] + h*p2/2.0, y[i] + h*q2/2.0, z[i] + h*r2/2.0,\
+                          sigma, beta, rho);
+    p4, q4, r4 = dynamics(x[i] + h*p3, y[i] + h*q3, z[i] + h*r3,\
+                          sigma, beta, rho);
+
+    x[i+1] = x[i] + h*(p1 + 2.0*p2 + 2.0*p3 + p4)/6.0;
+    y[i+1] = y[i] + h*(q1 + 2.0*q2 + 2.0*q3 + q4)/6.0;
+    z[i+1] = z[i] + h*(r1 + 2.0*r2 + 2.0*r3 + r4)/6.0;
+
+# plot results
+
+pl.figure(1);
+pl.plot(x, label='x');
+pl.plot(y, label='y');
+pl.plot(z, label='z');
+pl.legend();
+pl.xlabel("timestep");
+
+fig = pl.figure();
+ax = fig.add_subplot(111, projection='3d');
+ax.scatter(x, y, z);
+
+ax.set_xlabel('X');
+ax.set_ylabel('Y');
+ax.set_zlabel('Z');
+
+pl.show();
