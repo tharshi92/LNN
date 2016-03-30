@@ -40,21 +40,6 @@ def lorentzSim(T, h, params, x0):
         
         return dxdt, dydt, dzdt;
 
-
-    # define derivative functions
-
-    def x_prime(sigma, x, y, z):
-
-        return -sigma*(x - y);
-
-    def y_prime(rho, x, y, z):
-
-        return x*(rho - z) - y;
-
-    def z_prime(beta, x, y, z):
-
-        return x*y - beta*z;
-
     # integrate using Runge Kutta Method
 
     for i in xrange(0, int(N - 1)):
@@ -88,4 +73,4 @@ def lorentzSim(T, h, params, x0):
 if __name__ == "__main__":
     params = np.array([10.0, 8.0/3.0, 28.0]);
     x0 = np.array([1.0, 1.0, -1.0]);
-    lorentzSim(1.0, 1e-2, params, x0);
+    lorentzSim(600.0, 1e-3, params, x0);
