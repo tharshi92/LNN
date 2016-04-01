@@ -8,7 +8,7 @@ import pylab as pl;
 
 # define simulation parameters
 T = 16.0;    # simultion length
-h = 1e-3;    # timestep
+h = 1e-4;    # timestep
 N = T/h;   # number of steps
 
 params = np.array([10.0, 8.0/3.0, 28.0]);
@@ -75,13 +75,13 @@ print 'data exported to "data.txt"'
 
 
 
-fig1 = pl.figure();
-pl.plot(x, label='x');
-pl.plot(y, label='y');
-pl.plot(z, label='z');
-#pl.plot(truth, label='truth'); 
-pl.legend();
-pl.xlabel("timestep");
+##fig1 = pl.figure();
+##pl.plot(x, label='x');
+##pl.plot(y, label='y');
+##pl.plot(z, label='z');
+##pl.plot(truth, label='truth'); 
+##pl.legend();
+##pl.xlabel("timestep");
 
 ##fig2 = pl.figure();
 ##ax = fig2.add_subplot(111, projection='3d');
@@ -92,3 +92,5 @@ pl.xlabel("timestep");
 ##ax.set_zlabel('Z');
 
 pl.show()
+
+
