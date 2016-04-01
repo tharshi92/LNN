@@ -153,7 +153,7 @@ if __name__ == '__main__':
     xTest = (xTest - xShift)/xNorm;
     yTest = (yTest - yShift)/yNorm;
     
-    maxIter = int(1e6) + 1;
+    maxIter = int(1e5) + 1;
     minErr = 1e-4;
     cost = [];
     
