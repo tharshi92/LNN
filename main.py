@@ -45,15 +45,15 @@ bpn = BackPropagationNetwork((3, 3, 1));
 print 'Network Structure:\n{0}\n'.format(bpn.shape);
 print 'Training Via Gradient Descent.';
 
-maxIter = int(1e4) + 1;
+maxIter = int(1e5) + 1;
 minErr = 1e-4;
 cost = [];
 
 for i in range(maxIter):
-    err = bpn.trainEpoch(X, y, 1e-2, 1e-4);
+    err = bpn.trainEpoch(X, y, 1e-2, 1e-1);
     if i % 1e2 == 0:
         cost.append(err);
-    if i % 1e3 == 0:
+    if i % 5e3 == 0:
         print 'Iteration {0}\tError: {1:0.6f}'.format(i, err);
     if i == maxIter - 1:
         print 'Gradient Descent has reached the maximum number of iterations:'
@@ -71,8 +71,8 @@ print 'Final Cost (training):', errTrain;
 # rerun simulation with trained network
 
 # define simulation parameters
-T = 8.0;    # simultion length
-h = 1e-2;    # timestep
+T = 4.0;    # simultion length
+h = 1e-4;    # timestep
 N = T/h;   # number of steps
 
 params = np.array([10.0, 8.0/3.0, 28.0]);
@@ -180,24 +180,26 @@ for i in xrange(0, int(N - 1)):
 ##pl.ylabel('Log(c^2 + 1)');
 
 fig1 = pl.figure();
-pl.plot(x, label='x');
-pl.plot(y, label='y');
-pl.plot(z, label='z');
-pl.plot(xt, label='x truth');
-pl.plot(yt, label='y truth');
-pl.plot(zt, label='z truth');
+pl.plot(x, 'g', label='x');
+pl.plot(y, 'r', label='y');
+pl.plot(z, 'k', label='z');
+pl.plot(xt, 'c', label='x truth');
+pl.plot(yt, 'm', label='y truth');
+pl.plot(zt, '0.75', label='z truth');
 pl.legend();
 pl.xlabel("timestep");
 
-fig2 = pl.figure();
-ax = fig2.add_subplot(111, projection='3d');
-ax.scatter(x, y, z);
+##fig2 = pl.figure();
+##ax = fig2.add_subplot(111, projection='3d');
+##ax.scatter(x, y, z, marker = 'o', color = 'r');
+##ax.scatter(xt, yt, zt, marker = 'o', color = 'b');
+
 
 fig3 = pl.figure();
-pl.plot(np.log(np.abs(x - xt) + 1), label='x error');
-pl.plot(np.log(np.abs(y - yt) + 1), label='y error');
-pl.plot(np.log(np.abs(z - zt) + 1), label='z error');
-pl.title('errors log(u + 1)')
+pl.plot((x - xt), label='x error');
+pl.plot((y - yt), label='y error');
+pl.plot((z - zt), label='z error');
+pl.title('errors');
 pl.legend();
 pl.xlabel("timestep");
 

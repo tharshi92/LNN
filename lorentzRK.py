@@ -7,8 +7,8 @@ import pylab as pl;
 
 
 # define simulation parameters
-T = 16.0;    # simultion length
-h = 1e-4;    # timestep
+T = 8.0;    # simultion length
+h = 1e-2;    # timestep
 N = T/h;   # number of steps
 
 params = np.array([10.0, 8.0/3.0, 28.0]);
