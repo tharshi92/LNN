@@ -1,15 +1,15 @@
 # 3 layer Neural network attempts to fit training data
 # Coded by Tharshi Srikannathasan tsrikann@physics.utoronto.ca
 #
-## Version 1 (0216)
-##     3 Layer Net with regularization and minimization via python.optimize 'BFGS' method
-##     Problems: Fitting functions that have concavity similar to even polynomials
-## Version 2 (0316)
-##     Fixed scaling issue for fitting curves
-## Version 3 (040116)
-##     Added Lorentz Model (BFGS Convergence is much faster than gradient descent with momentum)
-##     no test data as of yet
-##     regularization exists but is not used
+# Version 1 (0216)
+#     3 Layer Net with regularization and minimization via python.optimize 'BFGS' method
+#     Problems: Fitting functions that have concavity similar to even polynomials
+# Version 2 (0316)
+#     Fixed scaling issue for fitting curves
+# Version 3 (040116)
+#     Added Lorentz Model (BFGS Convergence is much faster than gradient descent with momentum)
+#     no test data as of yet
+#     regularization exists but is not used
 
 
 import numpy as np
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     # Options
     plot = 1            # turn on plots of cost and fit
     gradTest = 0;       # check if the gradient implementation from NN.py works by checking with a numerical gradient
-    regression = 1;     # 1 -> regression, 0 -> simple classification
+    regression = 1;     # 1 -> regression, 0 -> classification
     
     if regression:
     
@@ -281,11 +281,11 @@ if __name__ == '__main__':
         pl.title('Cost Functions')
         pl.legend()
 
-            # rerun simulation with trained network
+        # rerun simulation with trained network
 
         # define simulation parameters
         T = 8.0;    # simultion length
-        h = 1e-3;    # timestep
+        h = 1e-4;    # timestep
         N = T/h;   # number of steps
 
         params = np.array([10.0, 8.0/3.0, 28.0]);
@@ -392,6 +392,9 @@ if __name__ == '__main__':
         pl.plot(xt, 'c', label='x truth');
         pl.plot(yt, 'm', label='y truth');
         pl.plot(zt, '0.75', label='z truth');
+        pl.grid(1);
+        pl.title('NNsim: timestep {0}, sim length {1}'.format(h, T));
+
         pl.legend();
         pl.xlabel("timestep");
 
@@ -408,10 +411,10 @@ if __name__ == '__main__':
         pl.plot((x - xt), label='x error');
         pl.plot((y - yt), label='y error');
         pl.plot((z - zt), label='z error');
-        pl.title('errors');
+        pl.title('errors; NNsim: timestep {0}, sim length {1}'.format(h, T));
+        pl.grid(1);
         pl.legend();
         pl.xlabel("timestep");
-
 
         pl.show();
             
